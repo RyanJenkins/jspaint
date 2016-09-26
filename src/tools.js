@@ -1,3 +1,10 @@
+BackBrushCursor(6, [255, 0, 0, 128]).done(function(data) {
+  setTimeout(function() {
+    console.log('blaz');
+    $canvas.css({cursor: data});
+  }, 500);
+});
+
 
 tools = [{
 	name: "Free-Form Select",

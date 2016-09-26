@@ -37,6 +37,50 @@ function Cursor(cursor_def){
 		", " + cursor_def[2];
 }
 
+function BackBrushCursor(size, color) {
+  var base_img = new Image();
+  var deferred = $.Deferred();
+
+  base_img.addEventListener('load', function() {
+    var new_cursor = Canvas(base_img);
+    var w = new_cursor.width;
+    var h = new_cursor.height;
+    var id = new_cursor.ctx.getImageData(0, 0, w, h);
+    var cx = ~~(w / 2);
+    var cy = ~~(h / 2);
+    var i, dx, dy;
+
+    console.log(cx, cy);
+    for (var d=0; d<size; d++) {
+      dx = cx + d;
+      dy = cy + d;
+      i = (dy * w * 4) + (dx * 4);
+
+      id.data[i] = color[0];
+      id.data[i+1] = color[1];
+      id.data[i+2] = color[2];
+      id.data[i+3] = color[3];
+
+      dx = cx - d;
+      dy = cy - d;
+      i = (dy * w * 4) + (dx * 4);
+
+      id.data[i] = color[0];
+      id.data[i+1] = color[1];
+      id.data[i+2] = color[2];
+      id.data[i+3] = color[3];
+    }
+
+    new_cursor.ctx.putImageData(id, 0, 0);
+    var cursor_prop = "url(" + new_cursor.toDataURL() + ") " + cx + " " + cy + ", auto";
+
+    deferred.resolve(cursor_prop);
+  });
+  base_img.src = "images/cursors/precise-dotted.png";
+
+  return deferred.promise();
+}
+
 function E(t){
 	return document.createElement(t);
 }
