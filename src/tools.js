@@ -1,9 +1,11 @@
+/*
 BackBrushCursor(6, [255, 0, 0, 128]).done(function(data) {
   setTimeout(function() {
     console.log('blaz');
     $canvas.css({cursor: data});
   }, 500);
 });
+*/
 
 
 tools = [{
@@ -302,7 +304,11 @@ tools = [{
 }, {
 	name: "Brush",
 	description: "Draws using a brush with the selected shape and size.",
-	cursor: ["precise-dotted", [16, 16], "crosshair"],
+	cursor: function() {
+    console.log(stroke_color);
+    return loadDynamicBrush( brush_shape, brush_size,
+      hex_to_rgba_arr(stroke_color));
+  },
 	continuous: "space",
 	rendered_color: "",
 	rendered_size: 0,
@@ -325,6 +331,7 @@ tools = [{
 			this.rendered_shape = brush_shape;
 		}
 		ctx.drawImage(brush_canvas, ~~(x-csz/2), ~~(y-csz/2));
+    console.log(brush_shape);
 	},
 	$options: $choose_brush
 }, {

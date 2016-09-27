@@ -31,48 +31,90 @@ var TAU =     //////|//////
 
 var $G = $(window);
 
+;(function() {
+  function updateCursor() {
+    var cursor = selected_tool.cursor;
+    var cursorLoaded = $.Deferred();
+
+    if (typeof cursor === 'function') {
+      cursorLoaded = cursor();
+    } else if (typeof cursor === 'string') {
+      // Cursor prop already specified
+      cursorLoaded.resolve(cursor);
+    } else {
+      cursorLoaded.resolve(Cursor(cursor));
+    }
+
+    cursorLoaded.done(function(cursorString) {
+      console.log('Setting:', cursorString);
+      $canvas.css('cursor', cursorString);
+    });
+  }
+
+  $G.on('tool-changed', updateCursor);
+  $G.on('option-changed', updateCursor);
+})();
+
 function Cursor(cursor_def){
 	return "url(images/cursors/" + cursor_def[0] + ".png) " +
 		cursor_def[1].join(" ") +
 		", " + cursor_def[2];
 }
 
-function BackBrushCursor(size, color) {
+function paintSlash(size, color, base, direction) {
+  direction = direction ? direction : 1;
+
+  var w = base.width;
+  var h = base.height;
+  var id = base.ctx.getImageData(0, 0, w, h);
+  var cx = ~~(w / 2);
+  var cy = ~~(h / 2);
+  var i, dx, dy;
+
+  for (var d=0; d<size; d++) {
+    dx = cx + d * direction;
+    dy = cy + d * direction;
+    i = (dy * w * 4) + (dx * 4);
+
+    id.data[i] = color[0];
+    id.data[i+1] = color[1];
+    id.data[i+2] = color[2];
+    id.data[i+3] = color[3];
+
+    dx = cx - d * direction;
+    dy = cy - d * direction;
+    i = (dy * w * 4) + (dx * 4);
+
+    id.data[i] = color[0];
+    id.data[i+1] = color[1];
+    id.data[i+2] = color[2];
+    id.data[i+3] = color[3];
+  }
+
+  base.ctx.putImageData(id, 0, 0);
+
+  return base;
+}
+
+function loadDynamicBrush(shape, size, color) {
   var base_img = new Image();
   var deferred = $.Deferred();
 
   base_img.addEventListener('load', function() {
     var new_cursor = Canvas(base_img);
-    var w = new_cursor.width;
-    var h = new_cursor.height;
-    var id = new_cursor.ctx.getImageData(0, 0, w, h);
-    var cx = ~~(w / 2);
-    var cy = ~~(h / 2);
-    var i, dx, dy;
+    var cx = ~~(new_cursor.width / 2);
+    var cy = ~~(new_cursor.height / 2);
 
-    console.log(cx, cy);
-    for (var d=0; d<size; d++) {
-      dx = cx + d;
-      dy = cy + d;
-      i = (dy * w * 4) + (dx * 4);
-
-      id.data[i] = color[0];
-      id.data[i+1] = color[1];
-      id.data[i+2] = color[2];
-      id.data[i+3] = color[3];
-
-      dx = cx - d;
-      dy = cy - d;
-      i = (dy * w * 4) + (dx * 4);
-
-      id.data[i] = color[0];
-      id.data[i+1] = color[1];
-      id.data[i+2] = color[2];
-      id.data[i+3] = color[3];
+    if (shape === 'diagonal') {
+      new_cursor = paintSlash(size, color, new_cursor, 1);
+    } else if (shape === 'reverse_diagonal') {
+      new_cursor = paintSlash(size, color, new_cursor, -1);
+    } else {
+      console.error('Unexpected shame:', shape);
     }
 
-    new_cursor.ctx.putImageData(id, 0, 0);
-    var cursor_prop = "url(" + new_cursor.toDataURL() + ") " + cx + " " + cy + ", auto";
+    var cursor_prop = "url(" + new_cursor.toDataURL() + ") " +
+      cx + " " + cy + ", auto";
 
     deferred.resolve(cursor_prop);
   });
@@ -83,6 +125,20 @@ function BackBrushCursor(size, color) {
 
 function E(t){
 	return document.createElement(t);
+}
+
+function hex_to_rgba_arr(hex) {
+  if (!hex) {
+    return [0,0,0,255];
+    console.log('jeez');
+  }
+
+  return [
+    parseInt(hex.substr(1, 2), 16),
+    parseInt(hex.substr(3, 2), 16),
+    parseInt(hex.substr(5, 2), 16),
+    255
+  ];
 }
 
 function get_rgba_from_color(color){

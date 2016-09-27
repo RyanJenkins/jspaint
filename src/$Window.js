@@ -20,7 +20,7 @@ function $Window($component){
 	$w.$x.on("mousedown selectstart", function(e){
 		e.preventDefault();
 	});
-	
+
 	$w.css({
 		position: "absolute",
 		zIndex: $Window.Z_INDEX++
@@ -211,4 +211,4 @@ function $FormWindow(title){
 	};
 	
 	return $w;
-};
+}

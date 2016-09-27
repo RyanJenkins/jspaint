@@ -69,9 +69,10 @@ function $ToolBox(){
 		$tool_options.children().detach();
 		$tool_options.append(selected_tool.$options);
 		$tool_options.children().trigger("update");
-		$canvas.css({
-			cursor: Cursor(selected_tool.cursor),
-		});
+    console.log($G);
+    console.log('laz');
+    $G.trigger('tool-changed');
+
 		deselect();
 		if(selected_tool.activate){
 			selected_tool.activate();
